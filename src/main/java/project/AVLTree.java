@@ -280,12 +280,12 @@ public class AVLTree<T extends Comparable<T>> {
             begin.left.balance = 0;
         } else if (begin.balance == -1) {
             begin.balance = 0;
-            begin.right.balance = 0;
-            begin.left.balance = -1;
-        } else {
-            begin.balance = 0;
             begin.right.balance = 1;
             begin.left.balance = 0;
+        } else {
+            begin.balance = 0;
+            begin.right.balance = 0;
+            begin.left.balance = -1;
         }
         return begin;
     }
@@ -304,12 +304,12 @@ public class AVLTree<T extends Comparable<T>> {
             begin.left.balance = 0;
         } else if (begin.balance == 1) {
             begin.balance = 0;
-            begin.right.balance = 1;
-            begin.left.balance = 0;
-        } else {
-            begin.balance = 0;
             begin.right.balance = 0;
             begin.left.balance = -1;
+        } else {
+            begin.balance = 0;
+            begin.right.balance = 1;
+            begin.left.balance = 0;
         }
         return begin;
     }
