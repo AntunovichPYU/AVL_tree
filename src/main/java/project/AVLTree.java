@@ -1,9 +1,9 @@
 package project;
 
 
-import java.util.NoSuchElementException;
+import java.util.*;
 
-public class AVLTree<T extends Comparable<T>> {
+public class AVLTree<T extends Comparable<T>> implements Set<T> {
 
     private static class Node<T> {
         T value;
@@ -17,14 +17,26 @@ public class AVLTree<T extends Comparable<T>> {
             right = null;
             balance = 0;// значение баланса показывает, на сколько правое поддерево узла больше левого
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Node<?> node = (Node<?>) o;
+            return balance == node.balance &&
+                    value.equals(node.value) &&
+                    Objects.equals(left, node.left) &&
+                    Objects.equals(right, node.right);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value, left, right, balance);
+        }
     }
 
     private Node<T> root = null;
     private int size = 0;
-
-    public int size() {
-        return size;
-    }
 
     private Node<T> find(T value) {
         if (root == null) return null;
@@ -46,11 +58,100 @@ public class AVLTree<T extends Comparable<T>> {
         }
     }
 
+
+    @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return root == null;
+    }
+
+    @Override
     public boolean contains(Object o) {
         @SuppressWarnings("unchecked")
         T t = (T) o;
         Node<T> closest = find(t);
         return closest != null && t.compareTo(closest.value) == 0;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new AVLTreeIterator();
+    }
+
+    public class AVLTreeIterator implements Iterator<T> {
+        Stack<Node<T>> stack = new Stack<>();
+        Node<T> current;
+        Node<T> prev;
+
+        AVLTreeIterator() {
+            pushToLeft(root);
+        }
+
+        private void pushToLeft(Node<T> node) {
+            if (node != null) {
+                stack.push(node);
+                pushToLeft(node.left);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !stack.isEmpty();
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
+            prev = current;
+            current = stack.pop();
+            pushToLeft(current.right);
+            return current.value;
+        }
+
+        @Override
+        public void remove() {
+            if (current == null)
+                throw new IllegalStateException();
+            if (root == current) {
+                AVLTree.this.remove(current.value);
+            }
+            else {
+                AVLTree.this.removeRecursive(prev, current.value);
+                size--;
+            }
+            prev = null;
+            current = null;
+        }
+    }
+
+    @Override
+    public Object[] toArray() {
+        Object[] result = new Object[size];
+        Iterator<T> it = this.iterator();
+        for (int i = 0; i < size; i++) {
+            result[i] = it.next();
+        }
+        return result;
+    }
+
+    @Override
+    public <T1> T1[] toArray(T1[] a) {
+        if (a == null) throw new NullPointerException();
+        if (a.length < size) {
+            return (T1[]) this.toArray();
+        } else {
+            Iterator<T> it = this.iterator();
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) it.next();
+            }
+        }
+
+        return a;
     }
 
     public int height() {
@@ -78,10 +179,10 @@ public class AVLTree<T extends Comparable<T>> {
      * Сложность: O(log n).
      */
 
+    @Override
     public boolean add(T t) {
         if (contains(t))
             return false;
-        Node<T> newNode = new Node<>(t);
         endAdding = false;
         root = addRecursive(root, t);
         size++;
@@ -130,10 +231,12 @@ public class AVLTree<T extends Comparable<T>> {
      *
      */
 
+    @Override
     public boolean remove(Object o) {
         if (!contains(o)) {
             return false;
         }
+        @SuppressWarnings("unchecked")
         T t = (T) o;
         endRemoving = false;
         root = removeRecursive(root, t);
@@ -187,6 +290,54 @@ public class AVLTree<T extends Comparable<T>> {
 
     private Node<T> findMin(Node<T> node) {
         return node.left == null ? node : findMin(node.left);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c) {
+        for (Object el: c) {
+            if (!this.contains(el)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends T> c) {
+        if (this.containsAll(c))
+            return false;
+        for (T el: c) {
+            this.add(el);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        if (c == null) throw new NullPointerException();
+        if (c.containsAll(this))
+            return false;
+        this.removeIf(el -> !c.contains(el));
+        return true;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        if (this.containsAll(c))
+            return false;
+        for (Object el: c) {
+            this.remove(el);
+        }
+
+        return true;
+    }
+
+    @Override
+    public void clear() {
+        root = null;
+        size = 0;
     }
 
     public T first() {
@@ -312,5 +463,19 @@ public class AVLTree<T extends Comparable<T>> {
             begin.left.balance = 0;
         }
         return begin;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AVLTree<?> avlTree = (AVLTree<?>) o;
+        return size == avlTree.size &&
+                Objects.equals(root, avlTree.root);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(root, size);
     }
 }
