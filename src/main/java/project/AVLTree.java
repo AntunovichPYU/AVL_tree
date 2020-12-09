@@ -112,21 +112,6 @@ public class AVLTree<T extends Comparable<T>> implements Set<T> {
             pushToLeft(current.right);
             return current.value;
         }
-
-        @Override
-        public void remove() {
-            if (current == null)
-                throw new IllegalStateException();
-            if (root == current) {
-                AVLTree.this.remove(current.value);
-            }
-            else {
-                AVLTree.this.removeRecursive(prev, current.value);
-                size--;
-            }
-            prev = null;
-            current = null;
-        }
     }
 
     @Override
@@ -316,16 +301,19 @@ public class AVLTree<T extends Comparable<T>> implements Set<T> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        if (c == null) throw new NullPointerException();
         if (c.containsAll(this))
             return false;
-        this.removeIf(el -> !c.contains(el));
+        List<T> control = new ArrayList<>(this);
+        for (T el: control) {
+            if (!c.contains(el))
+                this.remove(el);
+        }
         return true;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        if (this.containsAll(c))
+        if (!this.containsAll(c))
             return false;
         for (Object el: c) {
             this.remove(el);
@@ -338,24 +326,6 @@ public class AVLTree<T extends Comparable<T>> implements Set<T> {
     public void clear() {
         root = null;
         size = 0;
-    }
-
-    public T first() {
-        if (root == null) throw new NoSuchElementException();
-        Node<T> current = root;
-        while (current.left != null) {
-            current = current.left;
-        }
-        return current.value;
-    }
-
-    public T last() {
-        if (root == null) throw new NoSuchElementException();
-        Node<T> current = root;
-        while (current.right != null) {
-            current = current.right;
-        }
-        return current.value;
     }
 
     /**
@@ -463,6 +433,18 @@ public class AVLTree<T extends Comparable<T>> implements Set<T> {
             begin.left.balance = 0;
         }
         return begin;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("[");
+        Iterator<T> it = this.iterator();
+        while (it.hasNext()) {
+            result.append(it.next());
+            if (it.hasNext()) result.append(", ");
+        }
+        result.append("]");
+        return result.toString();
     }
 
     @Override
