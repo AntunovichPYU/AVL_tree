@@ -83,7 +83,7 @@ public class AVLTree<T extends Comparable<T>> implements Set<T> {
     }
 
     public class AVLTreeIterator implements Iterator<T> {
-        Stack<Node<T>> stack = new Stack<>();
+        Deque<Node<T>> stack = new ArrayDeque<>();
         Node<T> current;
         Node<T> prev;
 
